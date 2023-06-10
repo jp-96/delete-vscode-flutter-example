@@ -1,0 +1,48 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "flutter build apk",
+            "type": "shell",
+            "command": "flutter",
+            "args": [
+                "build",
+                "apk"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+        },
+        {
+            "label": "adb connect",
+            "type": "shell",
+            "command": "adb",
+            "args": [
+                "connect",
+                "${input:adbConnectHostPort}"
+            ],
+            "problemMatcher": [],
+        },
+        {
+            "label": "adb disconnect",
+            "type": "shell",
+            "command": "adb",
+            "args": [
+                "disconnect"
+            ],
+            "problemMatcher": [],
+        },
+    ],
+    "inputs": [
+        {
+            "id": "adbConnectHostPort",
+            "description": "adb connect HOST[:PORT]",
+            "default": "",
+            "type": "promptString"
+        },
+    ]
+}
