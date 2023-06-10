@@ -19,47 +19,40 @@ ARG OPENJDK_VERSION="11-jdk"
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends openjdk-${OPENJDK_VERSION}
 
+# node user
+ARG INSTALL_USER_HOME=/home/node
+WORKDIR ${INSTALL_USER_HOME}
+USER node
 
 # Android SDK
 # https://developer.android.com/tools
-ENV ANDROID_SDK_TOOLS_VERSION=8512546
-ENV ANDROID_PLATFORM_VERSION=33
-ENV ANDROID_BUILD_TOOLS_VERSION=33.0.0
-ENV ANDROID_HOME=/home/node/android-sdk
+ARG ANDROID_SDK_TOOLS_VERSION=9477386
+
+ENV ANDROID_HOME=${INSTALL_USER_HOME}/android-sdk
 ENV ANDROID_SDK_ROOT="${ANDROID_HOME}"
-ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/cmdline-tools/bin
-ENV PATH=${PATH}:${ANDROID_HOME}/platform-tools
-ENV PATH=${PATH}:${ANDROID_HOME}/emulator
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
 
-WORKDIR /home/node
-USER node
-
-RUN curl -C - --output android-sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS_VERSION}_latest.zip
-RUN	mkdir -p ${ANDROID_HOME}/
-RUN	unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}/cmdline-tools/
-RUN rm android-sdk-tools.zip
+RUN curl -C - --output android-sdk-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS_VERSION}_latest.zip \
+    && mkdir -p ${ANDROID_HOME}/ \
+    && unzip -q android-sdk-tools.zip -d ${ANDROID_HOME}/cmdline-tools/ \
+    && rm android-sdk-tools.zip \
+    && mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest
 RUN yes | sdkmanager --licenses
-RUN touch $HOME/.android/repositories.cfg
+RUN touch ${INSTALL_USER_HOME}/.android/repositories.cfg
 RUN sdkmanager platform-tools
-#RUN yes | sdkmanager "platforms;android-${ANDROID_PLATFORM_VERSION}" "build-tools;${ANDROID_BUILD_TOOLS_VERSION}"
-RUN sdkmanager --install "cmdline-tools;latest"
-## create emulator android	
-RUN sdkmanager emulator
-#RUN sdkmanager "system-images;android-${ANDROID_PLATFORM_VERSION};google_apis;x86_64"
-#RUN echo | avdmanager create avd -n Android${ANDROID_PLATFORM_VERSION} -k "system-images;android-${ANDROID_PLATFORM_VERSION};google_apis;x86_64"
 
 # Flutter SDK
-# https://flutter.dev/docs/development/tools/sdk/releases?tab=linux
-ENV FLUTTER_CHANNEL="stable"
-ENV FLUTTER_VERSION="3.3.4"
-# Make sure to use the needed channel and version for this.
-ENV FLUTTER_HOME=/home/node/flutter-sdk
+# https://docs.flutter.dev/release/archive?tab=linux
+ARG FLUTTER_CHANNEL="stable"
+ARG FLUTTER_VERSION="3.10.4"
+
+ENV FLUTTER_HOME=${INSTALL_USER_HOME}/flutter-sdk
 ENV PATH=${PATH}:${FLUTTER_HOME}/bin
 
 RUN curl -C - --output flutter.tar.xz https://storage.googleapis.com/flutter_infra_release/releases/${FLUTTER_CHANNEL}/linux/flutter_linux_${FLUTTER_VERSION}-${FLUTTER_CHANNEL}.tar.xz
 RUN tar -xf flutter.tar.xz \
     && mv flutter ${FLUTTER_HOME} \
-	&& rm flutter.tar.xz
+    && rm flutter.tar.xz
 RUN flutter config --android-sdk "${ANDROID_SDK_ROOT}"
 RUN yes | flutter doctor --android-licenses
 RUN flutter config --no-analytics
