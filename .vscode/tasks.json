@@ -18,6 +18,19 @@
             },
         },
         {
+            "label": "flutter build bundle",
+            "type": "shell",
+            "command": "flutter",
+            "args": [
+                "build",
+                "bundle"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
             "label": "adb connect",
             "type": "shell",
             "command": "adb",
