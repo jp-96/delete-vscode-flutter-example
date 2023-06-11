@@ -117,3 +117,8 @@ ShoppingListView
 - onToggle - A callback function to be invoked when an item is toggled
 - onDelete - A callback function to be invoked when an item is deleted
 - items - A list of Item objects
+
+
+# bundled realm
+
+https://github.com/realm/realm-dart-samples/tree/main/bundled_realm
