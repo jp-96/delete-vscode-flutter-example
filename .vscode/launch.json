@@ -10,5 +10,11 @@
             "request": "launch",
             "type": "node-terminal"
         },
+        {
+            "command": "flutter test",
+            "name": "flutter test",
+            "request": "launch",
+            "type": "node-terminal"
+        },
     ]
 }

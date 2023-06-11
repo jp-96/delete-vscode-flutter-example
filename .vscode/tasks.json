@@ -4,6 +4,57 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "rebuild apk",
+            "type": "shell",
+            "command": "echo",
+            "args": [
+                "Rebuild Android APK - Done!"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "flutter clean",
+                "flutter build bundle",
+                "copy config files",
+                "flutter build apk"
+            ],
+            "dependsOrder": "sequence",
+        },
+        {
+            "label": "flutter clean",
+            "type": "shell",
+            "command": "flutter",
+            "args": [
+                "clean"
+            ],
+            "problemMatcher": [],
+        },
+        {
+            "label": "flutter build bundle",
+            "type": "shell",
+            "command": "flutter",
+            "args": [
+                "build",
+                "bundle"
+            ],
+            "problemMatcher": [],
+        },
+        {
+            "label": "copy config files",
+            "type": "shell",
+            "command": "cp",
+            "args": [
+                "-rf",
+                "${workspaceFolder}/.configfiles/.android",
+                "${workspaceFolder}/.configfiles/.ios",
+                "${workspaceFolder}"
+            ],
+            "problemMatcher": [],
+        },
+        {
             "label": "flutter build apk",
             "type": "shell",
             "command": "flutter",
@@ -12,10 +63,6 @@
                 "apk"
             ],
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
         },
         {
             "label": "adb connect",

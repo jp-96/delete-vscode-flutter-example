@@ -10,6 +10,13 @@ services:
         # // Append -bullseye or -buster to pin to an OS version.
         # // Use -bullseye variants on local arm64/Apple Silicon.
         VARIANT: "16-bullseye"
+        # // Flutter SDK (Dart version)
+        # // 3.10.4   (3.0.3)
+        # // 3.10.0   (3.0.0)
+        # // 3.7.12   (2.19.6)
+        # // 3.0.0    (2.17.0)
+        # // 2.10.5   (2.16.2)
+        FLUTTER_VERSION: "3.10.4"
     volumes:
       - ..:/home/node/ws:cached
     tty: true
