@@ -1,93 +1,102 @@
-import "package:flutter/material.dart";
-import "package:flutter_map/flutter_map.dart";
-import "package:geolocator/geolocator.dart";
-import "package:latlong2/latlong.dart";
+import 'dart:async';
+import 'dart:io';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:realm/realm.dart';
+import 'package:flutter/services.dart';
+import 'model.dart';
 
-void main() => runApp(const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MyApp(),
-    ));
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _MyAppState createState() => _MyAppState();
+late Realm realm;
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  realm = await initRealm("realm/initial.realm");
+  runApp(const MyApp());
 }
 
-class _MyAppState extends State<MyApp> {
-  LatLng myLocationLatLng = LatLng(35.681, 139.767);
-  MapController mapController = MapController();
+Future<Realm> initRealm(String assetKey) async {
+  final config = Configuration.local([Car.schema]);
+  final file = File(config.path);
+  // await file.delete(); // <-- uncomment this to start over on every restart
+  if (!await file.exists()) {
+    ByteData realmBytes = await rootBundle.load(assetKey);
+    await file.writeAsBytes(
+      realmBytes.buffer
+          .asUint8List(realmBytes.offsetInBytes, realmBytes.lengthInBytes),
+      mode: FileMode.write,
+    );
+  }
+  return Realm(config);
+}
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   refreshMyLocation();
-  // }
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
 
-  Future<void> refreshMyLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error("Location permissions are denied");
-      }
-    }
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    final latitude = position.latitude;
-    final longitude = position.longitude;
-    setState(() {
-      myLocationLatLng = LatLng(latitude, longitude);
+  void _addRandomCar() {
+    const cars = [
+      'Mercedes',
+      'VW',
+      'Ford',
+      'Tesla',
+      'Ferrari',
+      'Polestar',
+      'Volvo',
+      'BMW'
+    ];
+    final r = Random();
+
+    realm.write(() {
+      realm.add(
+        Car(
+          cars[r.nextInt(cars.length)],
+          model: '${r.nextInt(20) + 2002}',
+        ),
+      );
     });
-    mapController.move(myLocationLatLng, 18);
+  }
+
+  void _removeCar(Car item) {
+    realm.write(() {
+      realm.delete(item);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("gsi Flutter"),
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(
-          Icons.my_location,
+      home: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: _addRandomCar,
+          tooltip: 'Add a car',
+          child: const Icon(Icons.add),
         ),
-        onPressed: () {
-          refreshMyLocation();
-        },
-      ),
-      body: FlutterMap(
-        mapController: mapController,
-        options: MapOptions(
-          center: myLocationLatLng,
-          zoom: 15.0,
-          maxZoom: 18,
-          minZoom: 9,
-          interactiveFlags: (InteractiveFlag.all & ~InteractiveFlag.rotate),
+        body: StreamBuilder<RealmResultsChanges<Car>>(
+          stream: realm.all<Car>().changes,
+          builder: (context, snapshot) {
+            final data = snapshot.data;
+
+            if (data == null) return const CircularProgressIndicator();
+
+            final results = data.results;
+            return ListView.builder(
+              itemCount: results.length,
+              itemBuilder: (context, index) {
+                final c = results[index];
+                return ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.car_rental)),
+                  title: Text(c.make),
+                  subtitle: Text(c.model ?? ''),
+                  onTap: () {_removeCar(c);},
+                );
+              },
+            );
+          },
         ),
-        children: [
-          TileLayer(
-            urlTemplate:
-                // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                // "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
-                "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-            userAgentPackageName: "land_place",
-          ),
-          MarkerLayer(markers: [
-            Marker(
-                width: 30.0,
-                height: 30.0,
-                point: myLocationLatLng,
-                builder: (ctx) => const Icon(
-                      Icons.location_on,
-                      color: Colors.blueAccent,
-                      size: 40,
-                    ))
-          ]),
-        ],
       ),
     );
+    // home: const MyHomePage(title: 'Flutter Demo Home Page'));
   }
 }
