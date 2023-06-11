@@ -72,3 +72,48 @@ cp -rf ./.configfiles/.android ./
 ```
 flutter build apk
 ```
+
+# realm example - Shopping List application
+
+https://betterprogramming.pub/building-an-offline-app-with-mongodb-realm-8d4d00f8646f
+
+```
+flutter pub add realm
+flutter pub get
+```
+
+
+Generate Schema from the RealmModel class
+
+`./lib/schemas/item.dart` --> `./lib/schemas/item.g.dart`
+
+```
+flutter pub run realm generate
+```
+
+ItemService - Working with Realm
+
+`lib/services/item_service.dart`
+
+- Configure and Open a Realm
+- Read all Items
+- Write an Item
+- Update an Item
+- Delete an Item
+
+ItemListView
+
+- items - A list of Item objects
+- onToggle - A callback function to be invoked when an item is toggled
+- onDelete - A callback function to be invoked when an item is deleted
+
+AddItemView
+
+- onAdd - A callback function to be invoked when an item is added
+
+ShoppingListView
+
+- onAdd - A callback function to be invoked when an item is added
+- onToggle - A callback function to be invoked when an item is toggled
+- onDelete - A callback function to be invoked when an item is deleted
+- items - A list of Item objects

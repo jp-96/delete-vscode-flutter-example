@@ -1,92 +1,102 @@
-import "package:flutter/material.dart";
-import "package:flutter_map/flutter_map.dart";
-import "package:geolocator/geolocator.dart";
-import "package:latlong2/latlong.dart";
+import 'package:flutter/material.dart';
+import 'package:realm/realm.dart';
+import './components/shopping_list_view.dart';
+import './schemas/item.dart';
+import './services/item_service.dart';
 
-void main() => runApp(const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MyApp(),
-    ));
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _MyAppState createState() => _MyAppState();
+void main() {
+  final ItemService service = ItemService();
+  runApp(MyApp(
+    service: service,
+  ));
 }
 
-class _MyAppState extends State<MyApp> {
-  LatLng myLocationLatLng = LatLng(35.681, 139.767);
-  MapController mapController = MapController();
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key, required this.service}) : super(key: key);
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   refreshMyLocation();
-  // }
+  final ItemService service;
 
-  Future<void> refreshMyLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error("Location permissions are denied");
-      }
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Shopping List',
+      theme: ThemeData(
+        primarySwatch: Colors.indigo,
+      ),
+      home: MyHomePage(
+        title: 'Shopping List',
+        service: service,
+      ),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key, required this.title, required this.service})
+      : super(key: key);
+
+  final String title;
+  final ItemService service;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  late RealmResults<Item> items;
+
+  onAdd(String text) {
+    debugPrint('Adding $text');
+    if (widget.service.addItem(text)) {
+      debugPrint('Added $text');
+      loadItems();
+    } else {
+      debugPrint('Something went wrong while adding $text');
     }
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    final latitude = position.latitude;
-    final longitude = position.longitude;
+  }
+
+  onToggle(Item item) {
+    debugPrint('Toggling status for ${item.text}');
+    if (widget.service.toggleItemStatus(item)) {
+      loadItems();
+    } else {
+      debugPrint('Something went wrong while toggling status for ${item.text}');
+    }
+  }
+
+  onDelete(Item item) {
+    debugPrint('Deleting ${item.text}');
+    if (widget.service.deleteItem(item)) {
+      loadItems();
+    } else {
+      debugPrint('Something went wrong while deleting ${item.text}');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadItems();
+  }
+
+  void loadItems() {
     setState(() {
-      myLocationLatLng = LatLng(latitude, longitude);
+      items = widget.service.getItems();
     });
-    mapController.move(myLocationLatLng, 18);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("gsi Flutter"),
+        title: Text(widget.title, style: const TextStyle(color: Colors.white)),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(
-          Icons.my_location,
-        ),
-        onPressed: () {
-          refreshMyLocation();
-        },
-      ),
-      body: FlutterMap(
-        mapController: mapController,
-        options: MapOptions(
-          center: myLocationLatLng,
-          zoom: 15.0,
-          maxZoom: 18,
-          minZoom: 9,
-          interactiveFlags: (InteractiveFlag.all & ~InteractiveFlag.rotate),
-        ),
-        children: [
-          TileLayer(
-            urlTemplate:
-                // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                // "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
-                "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-            userAgentPackageName: "land_place",
-          ),
-          MarkerLayer(markers: [
-            Marker(
-                width: 30.0,
-                height: 30.0,
-                point: myLocationLatLng,
-                builder: (ctx) => const Icon(
-                      Icons.location_on,
-                      color: Colors.blueAccent,
-                      size: 40,
-                    ))
-          ]),
-        ],
+      body: ShoppingListView(
+        items: items.toList(),
+        onAdd: onAdd,
+        onToggle: onToggle,
+        onDelete: onDelete,
       ),
     );
   }
