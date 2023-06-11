@@ -61,6 +61,13 @@ android {
     <application
 ```
 
+# copy android config files
+
+```
+cd ~/ws
+cp -rf ./.configfiles/.android ./
+```
+
 
 ```
 flutter build apk
