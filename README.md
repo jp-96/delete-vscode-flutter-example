@@ -122,3 +122,12 @@ ShoppingListView
 # bundled realm
 
 https://github.com/realm/realm-dart-samples/tree/main/bundled_realm
+
+
+# flutter_blue_plus
+
+https://pub.dev/packages/flutter_blue_plus
+
+```
+flutter pub add flutter_blue_plus permission_handler
+```
